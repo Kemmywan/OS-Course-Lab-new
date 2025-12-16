@@ -115,7 +115,7 @@ __maybe_unused static int cap_group_init_user(struct cap_group *cap_group, unsig
                                struct cap_group_args *args)
 {
 #ifdef CHCORE_OPENTRUSTEE
-        if (check_user_addr_range((vaddr_t)args->puuid, sizeof(TEE_UUID)) != 0)
+        if (check_user_addr_range((vaddr_t)args.puuid, sizeof(TEE_UUID)) != 0)
                 return -EINVAL;
 #endif /* CHCORE_OPENTRUSTEE */
 
@@ -125,14 +125,14 @@ __maybe_unused static int cap_group_init_user(struct cap_group *cap_group, unsig
 
         cap_group->pid = args->pid;
 #ifdef CHCORE_OPENTRUSTEE
-        cap_group->heap_size_limit = args->heap_size;
+        new_cap_group->heap_size_limit = args.heap_size;
         /* pid used in OH-TEE */
-        if (args->puuid) {
-                copy_from_user(&cap_group->uuid,
-                               (void *)args->puuid,
+        if (args.puuid) {
+                copy_from_user(&new_cap_group->uuid,
+                               (void *)args.puuid,
                                sizeof(TEE_UUID));
         } else {
-                memset(&cap_group->uuid, 0, sizeof(TEE_UUID));
+                memset(&new_cap_group->uuid, 0, sizeof(TEE_UUID));
         }
 #endif /* CHCORE_OPENTRUSTEE */
 
@@ -359,8 +359,11 @@ cap_t sys_create_cap_group(unsigned long cap_group_args_p)
         /* LAB 3 TODO BEGIN */
         /* initialize cap group from user*/
 
-        cap_group_init_user(new_cap_group, BASE_OBJECT_NUM, &args);
-        new_cap_group -> pid = args.pid;
+        r = cap_group_init_user(new_cap_group, BASE_OBJECT_NUM, &args);
+        if (r) {
+                goto out_free_obj_new_grp;
+        }
+        // Cannot be written as "r != 0"
 
         /* LAB 3 TODO END */
 
@@ -425,7 +428,7 @@ struct cap_group *create_root_cap_group(char *name, size_t name_len)
         cap_t slot_id;
 
         /* LAB 3 TODO BEGIN */
-        
+
         cap_group = obj_alloc(TYPE_CAP_GROUP, sizeof(*cap_group));
 
         /* LAB 3 TODO END */
@@ -434,7 +437,7 @@ struct cap_group *create_root_cap_group(char *name, size_t name_len)
         /* LAB 3 TODO BEGIN */
         /* initialize cap group with common, use ROOT_CAP_GROUP_BADGE */
 
-        cap_group_init_common(cap_group, BASE_OBJECT_NUM, ROOT_CAP_GROUP_BADGE);
+        BUG_ON(cap_group_init_common(cap_group, BASE_OBJECT_NUM, ROOT_CAP_GROUP_BADGE));
 
         /* LAB 3 TODO END */
         slot_id = cap_alloc(cap_group, cap_group);
@@ -443,7 +446,8 @@ struct cap_group *create_root_cap_group(char *name, size_t name_len)
 
         /* LAB 3 TODO BEGIN */
 
-        vmspace = obj_alloc(TYPE_VMSPACE, sizeof(*vmspace));
+        vmspace = obj_alloc(TYPE_VMSPACE, sizeof
+                (*vmspace));
 
         /* LAB 3 TODO END */
         BUG_ON(!vmspace);
@@ -453,7 +457,7 @@ struct cap_group *create_root_cap_group(char *name, size_t name_len)
 
         /* LAB 3 TODO BEGIN */
 
-        slot_id = cap_alloc(cap_group, vmspace);
+        slot_id = cap_alloc(cap_group, vmspace);        
 
         /* LAB 3 TODO END */
 

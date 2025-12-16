@@ -132,6 +132,8 @@ static void put(char buffer[], unsigned size)
 {
         /* LAB 3 TODO BEGIN */
 
+        chcore_syscall2(CHCORE_SYS_putstr, (vaddr_t)buffer, size);
+
         /* LAB 3 TODO END */
 }
 

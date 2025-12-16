@@ -26,7 +26,7 @@ void init_thread_ctx(struct thread *thread, vaddr_t stack, vaddr_t func,
 
         thread -> thread_ctx -> ec.reg[SP_EL0] = stack;
         thread -> thread_ctx -> ec.reg[ELR_EL1] = func;
-        thread -> thread_ctx -> ec.reg[SPSR_EL1] = SPSR_EL1_EL0t;
+        thread -> thread_ctx -> ec.reg[SPSR_EL1] = SPSR_EL1_USER;
 
         /* LAB 3 TODO END */
 
